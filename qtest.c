@@ -321,12 +321,12 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
     } else if (strcmp(words[0], "outb") == 0 ||
                strcmp(words[0], "outw") == 0 ||
                strcmp(words[0], "outl") == 0) {
-        uint16_t addr;
-        uint32_t value;
+        long int addr;
+        long int value;
 
         g_assert(words[1] && words[2]);
-        addr = strtoul(words[1], NULL, 0);
-        value = strtoul(words[2], NULL, 0);
+        addr = qemu_strtol(words[1], NULL, 0, &addr);
+        value = qemu_strtol(words[2], NULL, 0, &value);
 
         if (words[0][3] == 'b') {
             cpu_outb(addr, value);
@@ -340,11 +340,11 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
     } else if (strcmp(words[0], "inb") == 0 ||
         strcmp(words[0], "inw") == 0 ||
         strcmp(words[0], "inl") == 0) {
-        uint16_t addr;
+        long int addr;
         uint32_t value = -1U;
 
         g_assert(words[1]);
-        addr = strtoul(words[1], NULL, 0);
+        addr = qemu_strtol(words[1], NULL, 0, &addr);
 
         if (words[0][2] == 'b') {
             value = cpu_inb(addr);
@@ -359,12 +359,12 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
                strcmp(words[0], "writew") == 0 ||
                strcmp(words[0], "writel") == 0 ||
                strcmp(words[0], "writeq") == 0) {
-        uint64_t addr;
-        uint64_t value;
+        long int addr;
+        long int value;
 
         g_assert(words[1] && words[2]);
-        addr = strtoull(words[1], NULL, 0);
-        value = strtoull(words[2], NULL, 0);
+        addr = qemu_strtol(words[1], NULL, 0, &addr);
+        value = qemu_strtol(words[2], NULL, 0, &value);
 
         if (words[0][5] == 'b') {
             uint8_t data = value;
@@ -452,13 +452,14 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
         g_free(data);
         g_free(b64_data);
     } else if (strcmp(words[0], "write") == 0) {
-        uint64_t addr, len, i;
+        uint64_t i;
+	long int addr, len;
         uint8_t *data;
         size_t data_len;
 
         g_assert(words[1] && words[2] && words[3]);
-        addr = strtoull(words[1], NULL, 0);
-        len = strtoull(words[2], NULL, 0);
+        addr = qemu_strtol(words[1], NULL, 0, &addr);
+        len = qemu_strtol(words[2], NULL, 0, &len);
 
         data_len = strlen(words[3]);
         if (data_len < 3) {
@@ -481,13 +482,13 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
         qtest_send_prefix(chr);
         qtest_send(chr, "OK\n");
     } else if (strcmp(words[0], "memset") == 0) {
-        uint64_t addr, len;
+	long int addr, len;
         uint8_t *data;
         uint8_t pattern;
 
         g_assert(words[1] && words[2] && words[3]);
-        addr = strtoull(words[1], NULL, 0);
-        len = strtoull(words[2], NULL, 0);
+	addr = qemu_strtol(words[1], NULL, 0, &addr);
+        len = qemu_strtol(words[2], NULL, 0, &len);
         pattern = strtoull(words[3], NULL, 0);
 
         data = g_malloc(len);
@@ -498,14 +499,14 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
         qtest_send_prefix(chr);
         qtest_send(chr, "OK\n");
     }  else if (strcmp(words[0], "b64write") == 0) {
-        uint64_t addr, len;
+        long int addr, len;
         uint8_t *data;
         size_t data_len;
         gsize out_len;
 
         g_assert(words[1] && words[2] && words[3]);
-        addr = strtoull(words[1], NULL, 0);
-        len = strtoull(words[2], NULL, 0);
+        addr = qemu_strtol(words[1], NULL, 0, &addr);
+        len = qemu_strtol(words[2], NULL, 0, &len);
 
         data_len = strlen(words[3]);
         if (data_len < 3) {
@@ -526,10 +527,10 @@ static void qtest_process_command(CharDriverState *chr, gchar **words)
         qtest_send_prefix(chr);
         qtest_send(chr, "OK\n");
     } else if (qtest_enabled() && strcmp(words[0], "clock_step") == 0) {
-        int64_t ns;
+        long int ns;
 
         if (words[1]) {
-            ns = strtoll(words[1], NULL, 0);
+            ns = qemu_strtol(words[1], NULL, 0, &ns);
         } else {
             ns = qemu_clock_deadline_ns_all(QEMU_CLOCK_VIRTUAL);
         }
